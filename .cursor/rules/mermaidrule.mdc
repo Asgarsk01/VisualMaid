@@ -1,0 +1,169 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Cursor AI Rules for Mermaid Diagram Editor Project
+
+## Response Protocol
+
+**Every AI response must start with:** "Inshallah lets start"
+
+**Modal Identification:** At the beginning of each response, identify the current AI model being used by stating its official name.
+
+**Every AI response must end with:** "I have strictly followed all development rules and guidelines outlined in the rulebook while providing this response."
+
+## Tech Stack Requirements
+
+- **Framework:** Vite + React 18+ with TypeScript
+- **Styling:** Tailwind CSS + shadcn/ui components
+- **State Management:** Zustand for global state
+- **Core Libraries:** Mermaid.js, Monaco Editor, html2canvas
+- **Build Tool:** Vite with TypeScript configuration
+
+## Project Structure Standards
+
+```
+src/
+├── components/
+│   ├── ui/           # shadcn/ui components
+│   ├── editor/       # Code editor components
+│   ├── canvas/       # Canvas and diagram components
+│   └── common/       # Reusable components
+├── hooks/            # Custom hooks
+├── lib/              # Utilities and configurations
+├── store/            # Zustand stores
+├── types/            # TypeScript type definitions
+├── utils/            # Helper functions
+└── constants/        # Application constants
+```
+
+## Development Best Practices
+
+### React Component Standards
+- Use functional components with TypeScript
+- Implement proper prop types and interfaces
+- Use React.memo() for expensive components
+- Prefer composition over inheritance
+- Keep components small and focused (single responsibility)
+
+### Custom Hooks Standards
+- Extract complex logic into custom hooks
+- Use hooks for expensive calculations (useMemo, useCallback)
+- Create hooks for API calls and side effects
+- Name hooks with "use" prefix
+
+### State Management with Zustand
+- Create separate stores for different concerns (editor, canvas, settings)
+- Use selectors to prevent unnecessary re-renders
+- Implement proper TypeScript typing for stores
+- Keep store actions pure and predictable
+
+### TypeScript Standards
+- Use strict TypeScript configuration
+- Define proper interfaces for all props and data structures
+- Use generic types where appropriate
+- Avoid 'any' type - use proper typing
+
+### Performance Optimization
+- Use React.memo for expensive components
+- Implement useMemo for expensive calculations
+- Use useCallback for event handlers
+- Lazy load components where appropriate
+- Optimize bundle size with proper imports
+
+## Design System Guidelines
+
+### Color Palette (Professional Aesthetic)
+- **Primary Colors:** Pure white (#FFFFFF), Pure black (#000000)
+- **Grey Scale:** #F8F9FA, #E9ECEF, #DEE2E6, #CED4DA, #ADB5BD, #6C757D, #495057, #343A40, #212529
+- **Accent:** Use only subtle grey variations for hover states and borders
+- **Background:** White (#FFFFFF) primary, Light grey (#F8F9FA) secondary
+- **Text:** Black (#000000) primary, Dark grey (#343A40) secondary, Medium grey (#6C757D) tertiary
+- **Borders:** Light grey (#E9ECEF) for subtle divisions, Medium grey (#CED4DA) for emphasis
+
+### UI Component Standards
+- Use shadcn/ui components as base
+- Maintain consistent spacing (Tailwind scale: 4px increments)
+- Apply subtle shadows and borders
+- Use clean, minimal icons (Lucide React)
+- Implement smooth transitions (150-300ms duration)
+
+### Responsive Design
+- Mobile-first approach
+- Use Tailwind responsive prefixes (sm:, md:, lg:, xl:, 2xl:)
+- Ensure touch-friendly interfaces on mobile
+
+## Code Quality Standards
+
+### Naming Conventions
+- Components: PascalCase (e.g., `MermaidEditor`)
+- Files: kebab-case (e.g., `mermaid-editor.tsx`)
+- Variables/Functions: camelCase (e.g., `handleCodeChange`)
+- Constants: SCREAMING_SNAKE_CASE (e.g., `DEFAULT_MERMAID_CODE`)
+- Types/Interfaces: PascalCase with descriptive names
+
+### Import Organization
+```typescript
+// External libraries
+import React from 'react'
+import { useState } from 'react'
+
+// Internal components
+import { Button } from '@/components/ui/button'
+import { CodeEditor } from '@/components/editor'
+
+// Hooks and utilities
+import { useMermaidRenderer } from '@/hooks'
+import { validateMermaidCode } from '@/utils'
+
+// Types
+import type { MermaidCodeType } from '@/types'
+```
+
+### Error Handling
+- Implement proper error boundaries
+- Use try-catch for async operations
+- Provide user-friendly error messages
+- Log errors appropriately for debugging
+
+## Specific Implementation Guidelines
+
+### Mermaid Integration
+- Create abstracted Mermaid service in lib/
+- Implement proper error handling for invalid syntax
+- Use React refs for DOM manipulation
+- Cache rendered diagrams when possible
+
+### Canvas Implementation
+- Use refs for canvas manipulation
+- Implement proper event handlers for pan/zoom
+- Create separate utilities for canvas operations
+- Ensure smooth performance with requestAnimationFrame
+
+### Code Editor
+- Use Monaco Editor with Mermaid syntax highlighting
+- Implement proper themes matching design system
+- Add keyboard shortcuts for common actions
+- Ensure accessibility compliance
+
+### Export Functionality
+- Create separate utility for image export
+- Support multiple formats (PNG, JPG)
+- Implement proper error handling
+- Show loading states during export
+
+## Accessibility Requirements
+- Use semantic HTML elements
+- Implement proper ARIA labels
+- Ensure keyboard navigation
+- Maintain proper color contrast
+- Support screen readers
+
+## Security Considerations
+- Sanitize user input
+- Validate Mermaid code safely
+- Implement proper CSP headers
+- Use secure dependencies
+
+These rules are mandatory throughout the development. Any deviation must first be discussed with me and if approved, only then implemented.
