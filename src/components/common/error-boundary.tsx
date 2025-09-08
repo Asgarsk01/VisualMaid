@@ -26,10 +26,10 @@ const ErrorFallback: React.FC<{ error?: Error; resetError: () => void }> = ({
 
   return (
     <div className="h-screen w-screen bg-background text-foreground flex items-center justify-center p-8">
-      <div className="max-w-2xl w-full text-center space-y-8">
+      <div className="max-w-2xl w-full text-center space-y-4">
         {/* Error Icon */}
         <div className="animate-element animate-delay-100">
-          <div className="w-32 h-32 mx-auto mb-6 bg-destructive/10 rounded-full flex items-center justify-center">
+          <div className="w-32 h-32 mx-auto mb-4 bg-destructive/10 rounded-full flex items-center justify-center">
             <AlertTriangle className="w-16 h-16 text-destructive" />
           </div>
         </div>

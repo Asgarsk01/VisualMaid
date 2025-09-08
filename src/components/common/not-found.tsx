@@ -15,14 +15,7 @@ export const NotFound: React.FC = () => {
 
   return (
     <div className="h-screen w-screen bg-background text-foreground flex items-center justify-center p-8">
-      <div className="max-w-md w-full text-center space-y-8">
-        {/* 404 Icon */}
-        <div className="animate-element animate-delay-100">
-          <div className="w-32 h-32 mx-auto mb-6 bg-muted/20 rounded-full flex items-center justify-center">
-            <Search className="w-16 h-16 text-muted-foreground" />
-          </div>
-        </div>
-
+      <div className="max-w-md w-full text-center space-y-4">
         {/* Main Content */}
         <div className="space-y-4">
           <h1 className="animate-element animate-delay-200 text-6xl font-bold text-primary">

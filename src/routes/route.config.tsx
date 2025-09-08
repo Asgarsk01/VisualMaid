@@ -7,7 +7,7 @@ import { useNetworkStatus, useOfflineRedirect } from '@/hooks';
 // Lazy load components for better performance
 const SignInPage = lazy(() => import('@/components/auth/sign-in').then(module => ({ default: module.SignInPage })));
 const SignUpPage = lazy(() => import('@/components/auth/sign-up').then(module => ({ default: module.SignUpPage })));
-const Dashboard = lazy(() => import('@/components/dashboard/Dashboard'));
+const MermaidDashboard = lazy(() => import('@/components/dashboard/MermaidDashboard'));
 const NotFound = lazy(() => import('@/components/common/not-found'));
 const NoInternet = lazy(() => import('@/components/common/no-internet'));
 
@@ -102,7 +102,7 @@ export const routes = [
         path: 'dashboard',
         element: (
           <Suspense fallback={<Loading fullScreen text="Loading dashboard..." />}>
-            <Dashboard />
+            <MermaidDashboard />
           </Suspense>
         )
       }
