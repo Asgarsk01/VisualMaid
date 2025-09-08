@@ -20,10 +20,31 @@ const MermaidDashboard: React.FC = memo(() => {
     exportModalRef.current?.downloadSvg();
   }, []);
 
-  // AI Fix handler (placeholder for future implementation)
+  // AI Fix handler - calls Monaco editor's AI fix function
   const handleFixWithAI = useCallback(() => {
-    console.log('Fix with AI clicked - Implementation coming soon!');
-    // TODO: Implement AI error fixing functionality
+    console.log('AI fix triggered from dashboard');
+    
+    // Add a small delay to ensure Monaco editor is fully loaded
+    setTimeout(() => {
+      // Call the Monaco editor's AI fix function
+      const monacoAIFix = (window as any).monacoEditorAIFix;
+      console.log('Monaco AI fix function available:', !!monacoAIFix);
+      
+      if (monacoAIFix) {
+        console.log('Calling Monaco editor AI fix function');
+        monacoAIFix();
+      } else {
+        console.error('Monaco editor AI fix function not found');
+        // Try to test AI service directly
+        console.log('Testing AI service directly...');
+        import('@/lib/ai-service').then(({ testAIService, getAIServiceStatus }) => {
+          console.log('AI Service Status:', getAIServiceStatus());
+          testAIService().then(result => {
+            console.log('AI Service Test Result:', result);
+          });
+        });
+      }
+    }, 100);
   }, []);
 
   // Keyboard shortcuts

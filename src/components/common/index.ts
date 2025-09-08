@@ -7,4 +7,6 @@ export { ToastContainer } from './toast';
 export { default as ResizablePanels } from './resizable-panels';
 export { default as Header } from './header';
 export { default as HelpModal } from './help-modal';
+export { default as TypingAnimation } from './typing-animation';
+export { default as AILoading } from './ai-loading';
 export type { Toast, ToastType } from './toast';

@@ -79,6 +79,82 @@ export const parseMermaidError = (error: string): ParsedError[] => {
 };
 
 /**
+ * Enhanced error context for AI processing
+ */
+export interface EnhancedErrorContext {
+  originalError: string;
+  parsedErrors: ParsedError[];
+  errorType: 'syntax' | 'semantic' | 'rendering' | 'unknown';
+  suggestedFixes: string[];
+  codeContext?: {
+    line: number;
+    content: string;
+    surroundingLines: string[];
+  };
+}
+
+/**
+ * Analyzes error and provides enhanced context for AI
+ */
+export const analyzeErrorForAI = (error: string, mermaidCode: string): EnhancedErrorContext => {
+  const parsedErrors = parseMermaidError(error);
+  const lines = mermaidCode.split('\n');
+  
+  // Determine error type
+  let errorType: EnhancedErrorContext['errorType'] = 'unknown';
+  if (error.toLowerCase().includes('syntax')) {
+    errorType = 'syntax';
+  } else if (error.toLowerCase().includes('semantic')) {
+    errorType = 'semantic';
+  } else if (error.toLowerCase().includes('render')) {
+    errorType = 'rendering';
+  }
+
+  // Get code context for the first error with line number
+  let codeContext: EnhancedErrorContext['codeContext'] | undefined;
+  const firstErrorWithLine = parsedErrors.find(e => e.line);
+  if (firstErrorWithLine && firstErrorWithLine.line) {
+    const lineIndex = firstErrorWithLine.line - 1; // Convert to 0-based index
+    if (lineIndex >= 0 && lineIndex < lines.length) {
+      const surroundingLines = lines.slice(
+        Math.max(0, lineIndex - 2),
+        Math.min(lines.length, lineIndex + 3)
+      );
+      
+      codeContext = {
+        line: firstErrorWithLine.line,
+        content: lines[lineIndex],
+        surroundingLines
+      };
+    }
+  }
+
+  // Generate suggested fixes based on common patterns
+  const suggestedFixes: string[] = [];
+  
+  if (error.toLowerCase().includes('arrow')) {
+    suggestedFixes.push('Check arrow syntax: use -->, ---, -.-, or ==>');
+  }
+  if (error.toLowerCase().includes('node')) {
+    suggestedFixes.push('Check node syntax: use [text], (text), ((text)), or {text}');
+  }
+  if (error.toLowerCase().includes('subgraph')) {
+    suggestedFixes.push('Ensure subgraph is properly closed with "end"');
+  }
+  if (error.toLowerCase().includes('flowchart') || error.toLowerCase().includes('graph')) {
+    suggestedFixes.push('Check flowchart direction: TD, TB, BT, RL, or LR');
+  }
+
+  return {
+    originalError: error,
+    parsedErrors,
+    errorType,
+    suggestedFixes,
+    codeContext
+  };
+};
+
+/**
  * Extracts line numbers from Mermaid syntax errors
  */
 export const extractLineFromSyntaxError = (error: string): number | null => {

@@ -1,6 +1,8 @@
 import React, { useRef, useCallback } from 'react';
 import { AlertTriangle, ChevronUp, ChevronDown, GripHorizontal, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAIStore } from '@/store/ai-store';
+import { AILoading } from '@/components/common';
 
 interface ErrorInfo {
   message: string;
@@ -33,6 +35,8 @@ const ErrorTerminal: React.FC<ErrorTerminalProps> = ({
   const startYRef = useRef(0);
   const startHeightRef = useRef(0);
 
+  const { isFixing, isAnimating, error: aiError } = useAIStore();
+
   // Handle resize functionality - MUST be called before any early returns
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -58,8 +62,21 @@ const ErrorTerminal: React.FC<ErrorTerminalProps> = ({
     document.addEventListener('mouseup', handleMouseUp);
   }, [height, onHeightChange]);
 
-  // Always render the terminal if user has toggled it open or if there are errors
-  if (!isVisible && !errors.length) return null;
+  // Handle AI fix button click
+  const handleFixWithAIClick = useCallback(() => {
+    if (onFixWithAI) {
+      onFixWithAI();
+    } else {
+      // Fallback: try to call the Monaco editor's AI fix function
+      const monacoAIFix = (window as any).monacoEditorAIFix;
+      if (monacoAIFix) {
+        monacoAIFix();
+      }
+    }
+  }, [onFixWithAI]);
+
+  // Always render the terminal if user has toggled it open or if there are errors or AI is active
+  if (!isVisible && !errors.length && !isFixing && !isAnimating && !aiError) return null;
 
   return (
     <div className={`border-t border-gray-200 bg-gray-900 text-gray-100 flex-shrink-0 relative z-10 ${className}`}>
@@ -85,20 +102,18 @@ const ErrorTerminal: React.FC<ErrorTerminalProps> = ({
         </div>
         <div className="flex items-center space-x-2">
           {/* Fix with AI Button */}
-          {onFixWithAI && (
-            <Button
-              onClick={onFixWithAI}
-              disabled={errors.length === 0}
-              className={`h-7 px-3 text-xs font-medium border-0 shadow-sm transition-all duration-200 ${
-                errors.length > 0
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white hover:shadow-md'
-                  : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
-              }`}
-            >
-              <Sparkles className="w-3 h-3 mr-1.5" />
-              Fix with AI
-            </Button>
-          )}
+          <Button
+            onClick={handleFixWithAIClick}
+            disabled={errors.length === 0 || isFixing || isAnimating}
+            className={`h-7 px-3 text-xs font-medium border-0 shadow-sm transition-all duration-200 ${
+              errors.length > 0 && !isFixing && !isAnimating
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white hover:shadow-md'
+                : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
+            }`}
+          >
+            <Sparkles className={`w-3 h-3 mr-1.5 ${isFixing || isAnimating ? 'animate-spin' : ''}`} />
+            {isFixing || isAnimating ? 'AI Fixing...' : 'Fix with AI'}
+          </Button>
           
           {/* Toggle Button */}
           <Button
@@ -118,7 +133,15 @@ const ErrorTerminal: React.FC<ErrorTerminalProps> = ({
           className="overflow-y-auto"
           style={{ height: `${height - 60}px` }} // Subtract header height
         >
-          {errors.length === 0 ? (
+          {/* AI Loading Component */}
+          {(isFixing || isAnimating || aiError) && (
+            <div className="p-4">
+              <AILoading />
+            </div>
+          )}
+
+          {/* Error List */}
+          {errors.length === 0 && !isFixing && !isAnimating && !aiError ? (
             <div className="px-4 py-3 text-sm text-gray-400">
               No problems detected
             </div>
