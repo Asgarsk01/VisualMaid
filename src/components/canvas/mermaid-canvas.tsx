@@ -5,7 +5,7 @@ import { useCanvasStore } from '@/store/canvas-store';
 import { AlertCircle, Edit3 } from 'lucide-react';
 import { defaultMermaidConfig, generateMermaidId } from '@/lib/mermaid-utils';
 import { addTextEditListeners, updateMermaidCode } from '@/lib/text-editor';
-import { parseMermaidError } from '@/lib/error-parser';
+import { parseMermaidError, detectSyntaxErrors } from '@/lib/error-parser';
 
 interface MermaidCanvasProps {
   className?: string;
@@ -109,8 +109,22 @@ const MermaidCanvas: React.FC<MermaidCanvasProps> = memo(({ className = '' }) =>
       setValidation(false, errorMessage);
       
       // Parse the error for detailed information
-      const parsedErrors = parseMermaidError(errorMessage);
-      setParsedErrors(parsedErrors);
+      const mermaidErrors = parseMermaidError(errorMessage);
+      
+      // Also detect syntax errors manually
+      const syntaxErrors = detectSyntaxErrors(code);
+      
+      // Combine both types of errors, avoiding duplicates
+      const allErrors = [...mermaidErrors];
+      for (const syntaxError of syntaxErrors) {
+        // Check if we already have an error for this line
+        const existingError = allErrors.find(e => e.line === syntaxError.line);
+        if (!existingError) {
+          allErrors.push(syntaxError);
+        }
+      }
+      
+      setParsedErrors(allErrors);
       
       // Show simple error message in the canvas
       if (svgRef.current) {

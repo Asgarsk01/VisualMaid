@@ -1,5 +1,5 @@
 /**
- * AI Service for Mermaid Code Fixing using GitHub GPT-5 Model
+ * AI Service for Mermaid Code Fixing using GitHub GPT-4.1 Model
  * Security: API key is stored in environment variables and never exposed to client
  */
 
@@ -9,7 +9,7 @@ import { AzureKeyCredential } from "@azure/core-auth";
 // Environment variables for API configuration
 const GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN;
 const ENDPOINT = "https://models.github.ai/inference";
-const MODEL_NAME = "openai/gpt-5-mini";
+const MODEL_NAME = "openai/gpt-4.1";
 
 export interface AIFixRequest {
   mermaidCode: string;
@@ -91,7 +91,7 @@ const createUserPrompt = (request: AIFixRequest): string => {
 };
 
 /**
- * Makes API request to GitHub GPT-5
+ * Makes API request to GitHub GPT-4.1
  */
 const makeApiRequest = async (
   messages: Array<{ role: string; content: string }>,
@@ -161,15 +161,11 @@ export const fixMermaidCodeWithAI = async (
   request: AIFixRequest,
   options: AIFixOptions = {}
 ): Promise<AIFixResponse> => {
-  console.log('AI Service: fixMermaidCodeWithAI called with request:', request);
-  
   const maxRetries = 3;
   let lastError: string = '';
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`AI Service: Attempt ${attempt}/${maxRetries}`);
-      
       const systemPrompt = createSystemPrompt();
       const userPrompt = createUserPrompt(request);
       
@@ -178,9 +174,7 @@ export const fixMermaidCodeWithAI = async (
         { role: 'user', content: userPrompt }
       ];
 
-      console.log('AI Service: Making API request with messages:', messages);
       const response = await makeApiRequest(messages, options);
-      console.log('AI Service: API response:', response);
     
       if (response.success && response.fixedCode) {
         // Clean up the response - remove any markdown formatting
@@ -201,7 +195,6 @@ export const fixMermaidCodeWithAI = async (
         lastError = response.error;
         if (attempt < maxRetries) {
           const delay = Math.pow(2, attempt) * 1000; // Exponential backoff: 2s, 4s, 8s
-          console.log(`AI Service: Rate limited, retrying in ${delay}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
@@ -215,7 +208,6 @@ export const fixMermaidCodeWithAI = async (
       
       if (attempt < maxRetries) {
         const delay = Math.pow(2, attempt) * 1000; // Exponential backoff
-        console.log(`AI Service: Retrying in ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
@@ -249,18 +241,13 @@ export const getAIServiceStatus = (): {
  * Test AI service connectivity
  */
 export const testAIService = async (): Promise<boolean> => {
-  console.log('AI Service: Testing connectivity...');
-  console.log('AI Service: Status:', getAIServiceStatus());
-  
   try {
     const testRequest: AIFixRequest = {
       mermaidCode: 'flowchart TD\n    A[Test] --> B[Test]',
       errorMessage: 'Test error'
     };
     
-    console.log('AI Service: Making test request...');
     const response = await fixMermaidCodeWithAI(testRequest, { timeout: 10000 });
-    console.log('AI Service: Test response:', response);
     return response.success;
   } catch (error) {
     console.error('AI service test failed:', error);

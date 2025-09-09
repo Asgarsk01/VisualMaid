@@ -22,26 +22,18 @@ const MermaidDashboard: React.FC = memo(() => {
 
   // AI Fix handler - calls Monaco editor's AI fix function
   const handleFixWithAI = useCallback(() => {
-    console.log('AI fix triggered from dashboard');
-    
     // Add a small delay to ensure Monaco editor is fully loaded
     setTimeout(() => {
       // Call the Monaco editor's AI fix function
       const monacoAIFix = (window as any).monacoEditorAIFix;
-      console.log('Monaco AI fix function available:', !!monacoAIFix);
       
       if (monacoAIFix) {
-        console.log('Calling Monaco editor AI fix function');
         monacoAIFix();
       } else {
         console.error('Monaco editor AI fix function not found');
         // Try to test AI service directly
-        console.log('Testing AI service directly...');
-        import('@/lib/ai-service').then(({ testAIService, getAIServiceStatus }) => {
-          console.log('AI Service Status:', getAIServiceStatus());
-          testAIService().then(result => {
-            console.log('AI Service Test Result:', result);
-          });
+        import('@/lib/ai-service').then(({ testAIService }) => {
+          testAIService();
         });
       }
     }, 100);
@@ -117,8 +109,8 @@ const MermaidDashboard: React.FC = memo(() => {
           leftPanel={leftPanel}
           rightPanel={rightPanel}
           defaultSplit={50}
-          minSplit={25}
-          maxSplit={75}
+          minSplit={35}
+          maxSplit={65}
         />
       </div>
     </div>

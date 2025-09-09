@@ -35,9 +35,10 @@ const ResizablePanels: React.FC<ResizablePanelsProps> = ({
     const containerWidth = containerRect.width;
     const mouseX = event.clientX - containerRect.left;
     
+    const rawPercentage = (mouseX / containerWidth) * 100;
     const newSplitPercentage = Math.max(
       minSplit,
-      Math.min(maxSplit, (mouseX / containerWidth) * 100)
+      Math.min(maxSplit, rawPercentage)
     );
     
     setSplitPercentage(newSplitPercentage);

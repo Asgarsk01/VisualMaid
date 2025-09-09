@@ -45,7 +45,6 @@ export const NoInternet: React.FC = () => {
       redirectFromOffline();
     } catch (error) {
       // Still offline
-      console.log('Still offline');
     } finally {
       setIsChecking(false);
     }

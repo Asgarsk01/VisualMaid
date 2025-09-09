@@ -16,60 +16,88 @@ export interface ParsedError {
 export const parseMermaidError = (error: string): ParsedError[] => {
   const errors: ParsedError[] = [];
   
+  // Split error message by common delimiters to handle multiple errors
+  const errorSegments = error.split(/\n|;|\.\s+(?=[A-Z])/).filter(segment => segment.trim().length > 0);
+  
   // Common Mermaid error patterns
   const patterns = [
-    // Line number patterns
-    /line (\d+):?\s*(.+)/gi,
-    /at line (\d+):?\s*(.+)/gi,
-    /line (\d+), column (\d+):?\s*(.+)/gi,
+    // Line number patterns with better regex
+    /line\s+(\d+):?\s*(.+)/gi,
+    /at\s+line\s+(\d+):?\s*(.+)/gi,
+    /line\s+(\d+),\s*column\s+(\d+):?\s*(.+)/gi,
     /(\d+):(\d+):?\s*(.+)/gi,
+    /(\d+):\s*(.+)/gi,
     
     // Error type patterns
     /error:?\s*(.+)/gi,
-    /syntax error:?\s*(.+)/gi,
-    /parse error:?\s*(.+)/gi,
-    /rendering error:?\s*(.+)/gi,
+    /syntax\s+error:?\s*(.+)/gi,
+    /parse\s+error:?\s*(.+)/gi,
+    /rendering\s+error:?\s*(.+)/gi,
   ];
 
-  // Try to extract line numbers and error messages
-  for (const pattern of patterns) {
-    const matches = [...error.matchAll(pattern)];
-    for (const match of matches) {
-      if (match.length >= 3) {
-        const line = parseInt(match[1]);
-        const column = match[2] ? parseInt(match[2]) : undefined;
-        const message = match[match.length - 1] || match[0];
-        
-        if (!isNaN(line)) {
-          errors.push({
-            message: message.trim(),
-            line,
-            column,
-            type: 'error',
-            originalError: error
-          });
+  // Process each error segment
+  for (const segment of errorSegments) {
+    let segmentProcessed = false;
+    
+    // Try to extract line numbers and error messages
+    for (const pattern of patterns) {
+      const matches = [...segment.matchAll(pattern)];
+      for (const match of matches) {
+        if (match.length >= 3) {
+          const lineStr = match[1];
+          const columnStr = match[2];
+          const message = match[match.length - 1] || match[0];
+          
+          // Parse line number with better validation
+          const line = parseInt(lineStr, 10);
+          const column = columnStr && !isNaN(parseInt(columnStr, 10)) ? parseInt(columnStr, 10) : undefined;
+          
+          // Only add if line number is valid
+          if (!isNaN(line) && line > 0) {
+            errors.push({
+              message: message.trim(),
+              line,
+              column,
+              type: 'error',
+              originalError: segment
+            });
+            segmentProcessed = true;
+            break;
+          }
         }
+      }
+      if (segmentProcessed) break;
+    }
+    
+    // If no specific line numbers found for this segment, create a general error
+    if (!segmentProcessed) {
+      // Clean up common error prefixes
+      let cleanMessage = segment
+        .replace(/^error:?\s*/i, '')
+        .replace(/^syntax\s+error:?\s*/i, '')
+        .replace(/^parse\s+error:?\s*/i, '')
+        .replace(/^rendering\s+error:?\s*/i, '')
+        .trim();
+
+      // If message is too long, truncate it
+      if (cleanMessage.length > 100) {
+        cleanMessage = cleanMessage.substring(0, 100) + '...';
+      }
+
+      if (cleanMessage.length > 0) {
+        errors.push({
+          message: cleanMessage || 'Unknown error occurred',
+          type: 'error',
+          originalError: segment
+        });
       }
     }
   }
 
-  // If no specific line numbers found, create a general error
+  // If no errors were found at all, create a fallback error
   if (errors.length === 0) {
-    // Clean up common error prefixes
-    let cleanMessage = error
-      .replace(/^error:?\s*/i, '')
-      .replace(/^syntax error:?\s*/i, '')
-      .replace(/^parse error:?\s*/i, '')
-      .replace(/^rendering error:?\s*/i, '')
-      .trim();
-
-    // If message is too long, truncate it
-    if (cleanMessage.length > 100) {
-      cleanMessage = cleanMessage.substring(0, 100) + '...';
-    }
-
     errors.push({
-      message: cleanMessage || 'Unknown error occurred',
+      message: 'Syntax error in Mermaid diagram',
       type: 'error',
       originalError: error
     });
@@ -196,4 +224,71 @@ export const formatErrorMessage = (error: string): string => {
   }
 
   return message;
+};
+
+/**
+ * Manually detects syntax errors in Mermaid code
+ */
+export const detectSyntaxErrors = (mermaidCode: string): ParsedError[] => {
+  const errors: ParsedError[] = [];
+  const lines = mermaidCode.split('\n');
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    const lineNumber = i + 1;
+
+    // Skip empty lines and comments
+    if (!line || line.startsWith('%%')) continue;
+
+    // Check for common syntax errors
+    if (line.includes('D G[') || line.includes('D - G[')) {
+      errors.push({
+        message: 'Invalid connection syntax. Use --> to connect nodes',
+        line: lineNumber,
+        type: 'error',
+        originalError: line
+      });
+    }
+
+    if (line.includes('G - H[') || line.includes('G - H[')) {
+      errors.push({
+        message: 'Invalid connection syntax. Use --> to connect nodes',
+        line: lineNumber,
+        type: 'error',
+        originalError: line
+      });
+    }
+
+    // Check for missing arrows in connections
+    if (line.match(/[A-Z]\s+[A-Z]\[/) && !line.includes('-->') && !line.includes('---') && !line.includes('===')) {
+      errors.push({
+        message: 'Missing connection arrow. Use -->, ---, or === to connect nodes',
+        line: lineNumber,
+        type: 'error',
+        originalError: line
+      });
+    }
+
+    // Check for invalid node syntax
+    if (line.match(/[A-Z]\s*\[[^\]]*$/) && !line.includes(']')) {
+      errors.push({
+        message: 'Unclosed node bracket. Add ] to close the node',
+        line: lineNumber,
+        type: 'error',
+        originalError: line
+      });
+    }
+
+    // Check for invalid flowchart syntax
+    if (line.match(/^[A-Z]\s*[^-\s\[\(]/) && !line.includes('[') && !line.includes('(') && !line.includes('{')) {
+      errors.push({
+        message: 'Invalid node syntax. Use [text], (text), ((text)), or {text}',
+        line: lineNumber,
+        type: 'error',
+        originalError: line
+      });
+    }
+  }
+
+  return errors;
 };

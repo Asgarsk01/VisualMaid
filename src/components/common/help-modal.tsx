@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HelpCircle, X, Keyboard } from 'lucide-react';
+import { HelpCircle, X, BookOpen, Sparkles, Download, Eye, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface HelpModalProps {
@@ -9,14 +9,39 @@ interface HelpModalProps {
 const HelpModal: React.FC<HelpModalProps> = ({ className = '' }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const shortcuts = [
-    { keys: ['Ctrl', 'Shift', 'P'], description: 'Export as PNG' },
-    { keys: ['Ctrl', 'Shift', 'J'], description: 'Export as JPG' },
-    { keys: ['Ctrl', '0'], description: 'Reset zoom to 100%' },
-    { keys: ['Ctrl', 'Shift', 'G'], description: 'Toggle grid visibility' },
-    { keys: ['Ctrl', 'Shift', 'W'], description: 'Toggle word wrap (in editor)' },
-    { keys: ['Ctrl', 'Shift', 'L'], description: 'Toggle line numbers (in editor)' },
-    { keys: ['Ctrl', 'Shift', 'R'], description: 'Reset editor (in editor)' },
+  const mermaidExamples = [
+    {
+      title: 'Flowchart',
+      code: `flowchart TD
+    A[Start] --> B{Decision}
+    B -->|Yes| C[Action 1]
+    B -->|No| D[Action 2]
+    C --> E[End]
+    D --> E`,
+      description: 'Create flowcharts with decision points and actions'
+    },
+    {
+      title: 'Sequence Diagram',
+      code: `sequenceDiagram
+    participant A as User
+    participant B as System
+    A->>B: Request
+    B-->>A: Response`,
+      description: 'Show interactions between different entities'
+    },
+    {
+      title: 'Class Diagram',
+      code: `classDiagram
+    class Animal {
+        +String name
+        +makeSound()
+    }
+    class Dog {
+        +bark()
+    }
+    Animal <|-- Dog`,
+      description: 'Model object-oriented relationships'
+    }
   ];
 
   return (
@@ -45,8 +70,8 @@ const HelpModal: React.FC<HelpModalProps> = ({ className = '' }) => {
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <div className="flex items-center space-x-2">
-                  <Keyboard className="w-5 h-5 text-gray-600" />
-                  <h2 className="text-lg font-semibold text-gray-900">Keyboard Shortcuts</h2>
+                  <BookOpen className="w-5 h-5 text-gray-600" />
+                  <h2 className="text-lg font-semibold text-gray-900">Mermaid Diagram Editor Help</h2>
                 </div>
                 <Button
                   variant="outline"
@@ -59,34 +84,90 @@ const HelpModal: React.FC<HelpModalProps> = ({ className = '' }) => {
               </div>
               
               {/* Content */}
-              <div className="p-6 overflow-y-auto">
-                <div className="space-y-4">
-                  {shortcuts.map((shortcut, index) => (
-                    <div key={index} className="flex items-center justify-between py-2">
-                      <span className="text-sm text-gray-700">{shortcut.description}</span>
-                      <div className="flex items-center space-x-1">
-                        {shortcut.keys.map((key, keyIndex) => (
-                          <React.Fragment key={keyIndex}>
-                            <kbd className="px-2 py-1 text-xs font-mono bg-gray-100 border border-gray-300 rounded">
-                              {key}
-                            </kbd>
-                            {keyIndex < shortcut.keys.length - 1 && (
-                              <span className="text-gray-400 text-xs">+</span>
-                            )}
-                          </React.Fragment>
-                        ))}
+              <div className="p-6 overflow-y-auto max-h-[60vh]">
+                {/* Features Section */}
+                <div className="mb-6">
+                  <h3 className="text-md font-semibold text-gray-900 mb-3 flex items-center">
+                    <Sparkles className="w-4 h-4 mr-2 text-blue-500" />
+                    Key Features
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="flex items-start space-x-2">
+                      <Code className="w-4 h-4 text-green-500 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">AI-Powered Fixes</p>
+                        <p className="text-xs text-gray-600">Automatically fix syntax errors with AI assistance</p>
                       </div>
                     </div>
-                  ))}
+                    <div className="flex items-start space-x-2">
+                      <Eye className="w-4 h-4 text-blue-500 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Live Preview</p>
+                        <p className="text-xs text-gray-600">See your diagram update in real-time</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-2">
+                      <Download className="w-4 h-4 text-purple-500 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Export Options</p>
+                        <p className="text-xs text-gray-600">Download as PNG or JPG formats</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-2">
+                      <BookOpen className="w-4 h-4 text-orange-500 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Templates</p>
+                        <p className="text-xs text-gray-600">Start with pre-built diagram templates</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                  <h3 className="text-sm font-medium text-blue-900 mb-2">Tips:</h3>
-                  <ul className="text-sm text-blue-800 space-y-1">
-                    <li>• Use the template selector to get started quickly</li>
-                    <li>• Drag the resize handle to adjust panel sizes</li>
-                    <li>• Use the canvas toolbar to zoom and pan your diagrams</li>
-                    <li>• Export your diagrams in PNG or JPG format</li>
+
+                {/* Mermaid Examples */}
+                <div className="mb-6">
+                  <h3 className="text-md font-semibold text-gray-900 mb-3">Common Diagram Types</h3>
+                  <div className="space-y-4">
+                    {mermaidExamples.map((example, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-sm font-medium text-gray-900">{example.title}</h4>
+                          <span className="text-xs text-gray-500">{example.description}</span>
+                        </div>
+                        <pre className="text-xs bg-gray-50 p-3 rounded border overflow-x-auto">
+                          <code>{example.code}</code>
+                        </pre>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Quick Tips */}
+                <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                    <Sparkles className="w-4 h-4 mr-2 text-blue-500" />
+                    Quick Tips
+                  </h3>
+                  <ul className="text-sm text-gray-700 space-y-2">
+                    <li className="flex items-start">
+                      <span className="text-blue-500 mr-2">•</span>
+                      <span>Use the <strong>Fix with AI</strong> button when you see syntax errors in the terminal</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-blue-500 mr-2">•</span>
+                      <span>Start with templates from the template selector for common diagram types</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-blue-500 mr-2">•</span>
+                      <span>Use descriptive node names and labels to make your diagrams clear</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-blue-500 mr-2">•</span>
+                      <span>Export your diagrams to share or save for later use</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-blue-500 mr-2">•</span>
+                      <span>Check the terminal for detailed error messages and line numbers</span>
+                    </li>
                   </ul>
                 </div>
               </div>

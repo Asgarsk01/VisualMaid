@@ -2,7 +2,7 @@ import React, { useRef, useCallback } from 'react';
 import { AlertTriangle, ChevronUp, ChevronDown, GripHorizontal, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAIStore } from '@/store/ai-store';
-import { AILoading } from '@/components/common';
+import { AILoading, ShiningText } from '@/components/common';
 
 interface ErrorInfo {
   message: string;
@@ -35,7 +35,7 @@ const ErrorTerminal: React.FC<ErrorTerminalProps> = ({
   const startYRef = useRef(0);
   const startHeightRef = useRef(0);
 
-  const { isFixing, isAnimating, error: aiError } = useAIStore();
+  const { isFixing, isAnimating, error: aiError, lastFixResult } = useAIStore();
 
   // Handle resize functionality - MUST be called before any early returns
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -104,15 +104,15 @@ const ErrorTerminal: React.FC<ErrorTerminalProps> = ({
           {/* Fix with AI Button */}
           <Button
             onClick={handleFixWithAIClick}
-            disabled={errors.length === 0 || isFixing || isAnimating}
+            disabled={errors.length === 0}
             className={`h-7 px-3 text-xs font-medium border-0 shadow-sm transition-all duration-200 ${
-              errors.length > 0 && !isFixing && !isAnimating
+              errors.length > 0
                 ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white hover:shadow-md'
                 : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
             }`}
           >
-            <Sparkles className={`w-3 h-3 mr-1.5 ${isFixing || isAnimating ? 'animate-spin' : ''}`} />
-            {isFixing || isAnimating ? 'AI Fixing...' : 'Fix with AI'}
+            <Sparkles className={`w-3 h-3 mr-1.5 ${isFixing || isAnimating ? 'animate-pulse' : ''}`} />
+            Fix with AI
           </Button>
           
           {/* Toggle Button */}
@@ -130,11 +130,31 @@ const ErrorTerminal: React.FC<ErrorTerminalProps> = ({
       {/* Terminal Content */}
       {isVisible && (
         <div 
-          className="overflow-y-auto"
+          className="overflow-y-auto relative"
           style={{ height: `${height - 60}px` }} // Subtract header height
         >
-          {/* AI Loading Component */}
+          {/* AI Loading Overlay - covers entire terminal content */}
           {(isFixing || isAnimating || aiError) && (
+            <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-sm z-10 flex items-center justify-center">
+              <div className="text-center">
+                {/* Shining Text Animation */}
+                <ShiningText 
+                  texts={[
+                    "Analyzing your Mermaid code...",
+                    "Connecting to AI service...",
+                    "AI is fixing the syntax...",
+                    "Validating the solution...",
+                    "Almost done..."
+                  ]}
+                  className="text-sm font-medium"
+                  cycleDuration={1500}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* AI Loading Component - for error/success messages only */}
+          {(aiError || lastFixResult) && !isFixing && !isAnimating && (
             <div className="p-4">
               <AILoading />
             </div>
@@ -153,7 +173,6 @@ const ErrorTerminal: React.FC<ErrorTerminalProps> = ({
                   className="flex items-start space-x-3 px-4 py-2 hover:bg-gray-800 cursor-pointer"
                   onClick={() => {
                     // TODO: Jump to line in editor
-                    console.log(`Jump to line ${error.line}`);
                   }}
                 >
                   <div className="flex-shrink-0 mt-0.5">

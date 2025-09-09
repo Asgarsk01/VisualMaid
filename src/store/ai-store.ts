@@ -98,11 +98,8 @@ export const useAIStore = create<AIStore>()(
       fixCodeWithAI: async (request: AIFixRequest): Promise<AIFixResponse> => {
         const { startFix, setProgress, setCurrentStep, setFixResult, setError } = get();
         
-        console.log('AI Store: fixCodeWithAI called with request:', request);
-        
         try {
           // Start the fixing process
-          console.log('AI Store: Starting fix process');
           startFix();
           
           // Simulate progress steps with realistic timing

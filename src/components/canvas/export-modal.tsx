@@ -37,7 +37,6 @@ const ExportModal = forwardRef<ExportModalRef, ExportModalProps>(({ className = 
       const svgWidth = Math.max(svgBBox.width, rect.width, svgElement.clientWidth, 800);
       const svgHeight = Math.max(svgBBox.height, rect.height, svgElement.clientHeight, 600);
       
-      console.log('SVG dimensions:', { svgWidth, svgHeight, bbox: svgBBox, rect });
       
       // Clone the SVG and prepare it for export
       const clonedSvg = svgElement.cloneNode(true) as SVGElement;
@@ -96,7 +95,6 @@ const ExportModal = forwardRef<ExportModalRef, ExportModalProps>(({ className = 
       document.body.removeChild(link);
       URL.revokeObjectURL(downloadUrl);
       
-      console.log('SVG download completed successfully');
       
     } catch (error) {
       console.error('SVG download error:', error);

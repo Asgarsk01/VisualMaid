@@ -21,12 +21,10 @@ const Dashboard: React.FC = memo(() => {
   // Memoized navigation handlers
   const handleProfileClick = useCallback(() => {
     // Future profile functionality
-    console.log('Profile clicked');
   }, []);
 
   const handleSettingsClick = useCallback(() => {
     // Future settings functionality
-    console.log('Settings clicked');
   }, []);
 
   return (

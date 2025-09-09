@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut, User } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { useEditorStore } from '@/store/editor-store';
-import { Button } from '@/components/ui/button';
 
 interface HeaderProps {
   className?: string;
@@ -35,10 +34,11 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
       <div className="flex items-center justify-between px-6 py-4">
         {/* Logo/Brand */}
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">V</span>
-          </div>
-          <h1 className="text-xl font-semibold text-gray-900">VisualMaid</h1>
+          <img 
+            src="/MermAII.png" 
+            alt="MermAI Logo" 
+            className="h-9 w-auto"
+          />
         </div>
         
         {/* User Menu */}
@@ -50,15 +50,13 @@ const Header: React.FC<HeaderProps> = ({ className = '' }) => {
           </div>
           
           {/* Sign Out Button */}
-          <Button
+          <button
             onClick={handleSignOut}
-            variant="outline"
-            size="sm"
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors duration-200 px-3 py-2 rounded-md hover:bg-gray-50"
           >
             <LogOut className="w-4 h-4" />
-            <span>Sign Out</span>
-          </Button>
+            <span className="text-sm font-medium">Sign Out</span>
+          </button>
         </div>
       </div>
     </header>

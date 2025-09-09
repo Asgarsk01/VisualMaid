@@ -89,7 +89,7 @@ export const useEditorStore = create<EditorStore>()(
           isDefaultCode: isDefault 
         }, false, 'setCode');
         
-        // Save to localStorage
+        // Save to localStorage immediately
         saveMermaidCode(code);
       },
       

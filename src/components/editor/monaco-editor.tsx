@@ -3,8 +3,6 @@ import Editor, { OnMount } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import { useEditorStore } from '@/store/editor-store';
 import { useAIStore } from '@/store/ai-store';
-import { TypingAnimation } from '@/components/common';
-import { analyzeErrorForAI } from '@/lib/error-parser';
 
 interface MonacoEditorProps {
   className?: string;
@@ -12,8 +10,8 @@ interface MonacoEditorProps {
 
 const MonacoEditor: React.FC<MonacoEditorProps> = ({ className = '' }) => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const [showTypingAnimation, setShowTypingAnimation] = useState(false);
-  const [animationCode, setAnimationCode] = useState('');
+  const [isTypingAnimation, setIsTypingAnimation] = useState(false);
+  const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   const {
     code,
@@ -26,21 +24,11 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({ className = '' }) => {
   } = useEditorStore();
 
   const {
-    isAnimating,
-    lastFixResult,
     fixCodeWithAI,
     resetAI,
+    typingSpeed,
   } = useAIStore();
 
-  // Debug AI store state
-  useEffect(() => {
-    console.log('Monaco Editor: AI store state updated', {
-      isAnimating,
-      lastFixResult,
-      hasFixCodeWithAI: !!fixCodeWithAI,
-      hasResetAI: !!resetAI
-    });
-  }, [isAnimating, lastFixResult, fixCodeWithAI, resetAI]);
 
   // Handle editor mount
   const handleEditorDidMount: OnMount = useCallback((editor, monaco) => {
@@ -132,38 +120,61 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({ className = '' }) => {
     setCode(value || '');
   }, [setCode]);
 
-  // Handle AI fix completion
-  const handleAIFixComplete = useCallback(() => {
-    if (lastFixResult?.success && lastFixResult.fixedCode) {
-      setCode(lastFixResult.fixedCode);
-      setShowTypingAnimation(false);
-      resetAI();
-    }
-  }, [lastFixResult, setCode, resetAI]);
+  // Start typing animation directly in the editor
+  const startTypingAnimation = useCallback((fixedCode: string) => {
+    if (!editorRef.current) return;
 
-  // Handle typing animation progress
-  const handleTypingProgress = useCallback((progress: number) => {
-    // Optional: Update progress in AI store if needed
+    setIsTypingAnimation(true);
+
+    // Clear existing interval
+    if (typingIntervalRef.current) {
+      clearInterval(typingIntervalRef.current);
+    }
+
+    // Start typing animation
+    let currentIndex = 0;
+    typingIntervalRef.current = setInterval(() => {
+      currentIndex += 1;
+      const newCode = fixedCode.substring(0, currentIndex);
+      
+      // Update the editor content directly
+      if (editorRef.current) {
+        editorRef.current.setValue(newCode);
+      }
+
+      if (currentIndex >= fixedCode.length) {
+        // Animation complete
+        if (typingIntervalRef.current) {
+          clearInterval(typingIntervalRef.current);
+        }
+        setIsTypingAnimation(false);
+        
+        // Update code and localStorage immediately
+        setCode(fixedCode);
+        
+        resetAI();
+      }
+    }, typingSpeed);
+  }, [typingSpeed, setCode, resetAI]);
+
+  // Cleanup typing animation on unmount
+  useEffect(() => {
+    return () => {
+      if (typingIntervalRef.current) {
+        clearInterval(typingIntervalRef.current);
+      }
+    };
   }, []);
 
   // Expose AI fix function to parent components
   const handleAIFix = useCallback(async () => {
-    console.log('Monaco editor AI fix called');
-    console.log('Parsed errors:', parsedErrors);
-    console.log('Current code:', code);
-    
     if (parsedErrors.length === 0) {
-      console.log('No errors found, returning early');
       return;
     }
 
     try {
       // Get the first error for context
       const firstError = parsedErrors[0];
-      console.log('First error:', firstError);
-      
-      const errorContext = analyzeErrorForAI(firstError.message, code);
-      console.log('Error context:', errorContext);
 
       // Prepare AI request
       const aiRequest = {
@@ -172,38 +183,42 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({ className = '' }) => {
         errorLine: firstError.line,
         errorColumn: firstError.column,
       };
-      
-      console.log('AI request:', aiRequest);
 
       // Start the AI fix process
-      console.log('Starting AI fix process...');
       const result = await fixCodeWithAI(aiRequest);
-      console.log('AI fix result:', result);
 
       if (result.success && result.fixedCode) {
-        console.log('AI fix successful, starting animation');
-        // Start typing animation
-        setAnimationCode(result.fixedCode);
-        setShowTypingAnimation(true);
+        // Start typing animation directly in the editor
+        startTypingAnimation(result.fixedCode);
       } else {
         console.error('AI fix failed:', result.error);
       }
     } catch (error) {
       console.error('AI fix failed with exception:', error);
     }
-  }, [parsedErrors, code, fixCodeWithAI]);
+  }, [parsedErrors, code, fixCodeWithAI, startTypingAnimation]);
 
   // Expose the AI fix function to parent components
   useEffect(() => {
     // Store the AI fix function in a way that parent components can access it
-    console.log('Monaco Editor: Exposing AI fix function to window');
     (window as any).monacoEditorAIFix = handleAIFix;
     
-    return () => {
-      console.log('Monaco Editor: Cleaning up AI fix function from window');
-      delete (window as any).monacoEditorAIFix;
+    // Also expose a function to refresh from localStorage for testing
+    (window as any).refreshEditorFromStorage = () => {
+      const storedCode = localStorage.getItem('visualmaid_mermaid_code');
+      if (storedCode) {
+        setCode(storedCode);
+        if (editorRef.current) {
+          editorRef.current.setValue(storedCode);
+        }
+      }
     };
-  }, [handleAIFix]);
+    
+    return () => {
+      delete (window as any).monacoEditorAIFix;
+      delete (window as any).refreshEditorFromStorage;
+    };
+  }, [handleAIFix, setCode]);
 
   // Update editor options when store values change
   useEffect(() => {
@@ -250,32 +265,11 @@ const MonacoEditor: React.FC<MonacoEditorProps> = ({ className = '' }) => {
           renderLineHighlight: 'line',
           selectOnLineNumbers: true,
           roundedSelection: false,
-          readOnly: showTypingAnimation, // Disable editing during animation
+          readOnly: isTypingAnimation, // Disable editing during animation
           cursorStyle: 'line',
           accessibilitySupport: 'auto',
         }}
       />
-      
-      {/* Typing Animation Overlay */}
-      {showTypingAnimation && animationCode && (
-        <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="max-w-4xl w-full p-6">
-            <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-2" />
-                AI is fixing your code...
-              </h3>
-              <TypingAnimation
-                originalCode={code}
-                fixedCode={animationCode}
-                onComplete={handleAIFixComplete}
-                onProgress={handleTypingProgress}
-                className="min-h-[200px] max-h-[400px] overflow-y-auto"
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
